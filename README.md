@@ -17,40 +17,40 @@ A robust, modular web crawler built in Python for extracting and saving content 
 ## Installation
 
 1. Clone the repository:
-```bash
-git clone https://github.com/M-LAai-ai/Crawler.git
-cd Crawler
-```
+   ```bash
+   git clone https://github.com/simonpierreboucher/Crawler.git
+   cd Crawler
+   ```
 
 2. Create and activate a virtual environment:
-```bash
-# On Unix/MacOS
-python -m venv venv
-source venv/bin/activate
+   ```bash
+   # On Unix/MacOS
+   python -m venv venv
+   source venv/bin/activate
 
-# On Windows
-python -m venv venv
-.\venv\Scripts\activate
-```
+   # On Windows
+   python -m venv venv
+   .\venv\Scripts\activate
+   ```
 
 3. Install the package and dependencies:
-```bash
-pip install -e .
-```
+   ```bash
+   pip install -e .
+   ```
 
 ## Output Format
 
 Each extracted page is saved as a text file with the following format:
 
 ```text
-URL: https://www.example.com/some-page
+URL: https://www.example.com/page
 Timestamp: 2024-11-12 23:45:12
 ====================================================================================================
 
 [Extracted content from the page]
 
 ====================================================================================================
-End of content from: https://www.example.com/some-page
+End of content from: https://www.example.com/page
 ```
 
 ## Configuration
@@ -181,7 +181,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Authors
 
-- **Simon-Pierre Boucher** - *Initial work* - [M-LAai-ai](https://github.com/M-LAai-ai)
+- **Simon-Pierre Boucher** - *Initial work* - [Github](https://github.com/simonpierreboucher)
 
 ## Version History
 
@@ -197,8 +197,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Contact
 
-Project Link: [https://github.com/M-LAai-ai/Crawler](https://github.com/M-LAai-ai/Crawler)
-
-## Disclaimer
-
-Please ensure you have permission to crawl websites and respect robots.txt files. This crawler is designed for educational purposes and should be used responsibly.
+Project Link: [https://github.com/simonpierreboucher/Crawler](https://github.com/simonpierreboucher/Crawler)
