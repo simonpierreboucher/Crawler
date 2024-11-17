@@ -1,20 +1,32 @@
 from src.constants import *
+import os
+import logging
+import sys
+import json
+from datetime import datetime
+from collections import deque
+import concurrent.futures
+import time
+import random
 
 class SafeCrawler:
     """Classe principale du crawler"""
     
-    def __init__(self, config, session, content_extractor, url_processor):
+    def __init__(self, config, session, content_extractor, url_processor, output_dir, resume=False):
         self.config = config
         self.session = session
         self.content_extractor = content_extractor
         self.url_processor = url_processor
+        self.output_dir = output_dir
+        self.resume = resume
         
         self.seen_urls = set()
         self.queue = deque()
         self.start_time = time.time()
         
         self.setup_signal_handlers()
-        self.load_state()
+        if not self.resume:
+            self.load_state()
 
     def setup_signal_handlers(self):
         signal.signal(signal.SIGINT, self.signal_handler)
@@ -32,7 +44,7 @@ class SafeCrawler:
                 'queue': list(self.queue),
                 'timestamp': datetime.now().isoformat()
             }
-            with open('crawler_state.json', 'w', encoding='utf-8') as f:
+            with open(os.path.join(self.output_dir, 'crawler_state.json'), 'w', encoding='utf-8') as f:
                 json.dump(state, f, indent=2)
             logging.info("État sauvegardé")
         except Exception as e:
@@ -40,8 +52,9 @@ class SafeCrawler:
 
     def load_state(self):
         try:
-            if os.path.exists('crawler_state.json'):
-                with open('crawler_state.json', 'r', encoding='utf-8') as f:
+            state_path = os.path.join(self.output_dir, 'crawler_state.json')
+            if os.path.exists(state_path):
+                with open(state_path, 'r', encoding='utf-8') as f:
                     state = json.load(f)
                 self.seen_urls = set(state.get('seen_urls', []))
                 self.queue.extend(state.get('queue', []))
@@ -67,6 +80,7 @@ class SafeCrawler:
             except Exception as e:
                 if attempt == self.config['timeouts']['max_retries'] - 1:
                     raise
+                logging.warning(f"Retrying {url} ({attempt + 1}/{self.config['timeouts']['max_retries']}) due to error: {str(e)}")
                 time.sleep(2 ** attempt)
 
     def process_url(self, url):
@@ -109,17 +123,18 @@ class SafeCrawler:
             logging.error(f"Erreur HTML {url}: {str(e)}")
             return None
 
-    def save_content(self, url, content):
+    def save_content(self, url, content_type, content):
         """Sauvegarde le contenu extrait avec métadonnées"""
         try:
-            filename = self.url_processor.sanitize_filename(url[8:].replace("/", "_"))
-            filepath = f'text/{self.config["domain"]["name"]}/{filename}.txt'
+            filename = self.url_processor.sanitize_filename(url)
+            filepath = os.path.join(self.output_dir, f"{filename}.txt")
             os.makedirs(os.path.dirname(filepath), exist_ok=True)
             
             # Prépare le contenu avec métadonnées
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             formatted_content = f"""URL: {url}
 Timestamp: {timestamp}
+Content Type: {content_type}
 {'=' * 100}
 
 {content}
@@ -138,7 +153,7 @@ End of content from: {url}"""
             normalized_url = self.url_processor.normalize_url(url)
             if normalized_url not in self.seen_urls:
                 self.seen_urls.add(normalized_url)
-                self.save_content(url, content)
+                self.save_content(url, content_type, content)
                 
                 if content_type == 'html':
                     self.queue_new_links(url)
@@ -158,7 +173,8 @@ End of content from: {url}"""
             logging.error(f"Erreur extraction liens {url}: {str(e)}")
 
     def crawl(self):
-        self.queue.append(self.config['domain']['start_url'])
+        if not self.resume:
+            self.queue.append(self.config['domain']['start_url'])
         
         with concurrent.futures.ThreadPoolExecutor(
             max_workers=self.config['crawler']['max_workers']
