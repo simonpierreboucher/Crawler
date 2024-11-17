@@ -20,6 +20,8 @@ files:
   max_url_length: 2000
   max_log_size: 10485760  # 10MB
   max_log_backups: 5
+  output_dir: "text"  # Répertoire de sortie
+  log_dir: "logs"     # Répertoire des logs
 
 excluded:
   extensions:
