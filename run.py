@@ -5,6 +5,9 @@ from src.session import SafeSession
 from src.extractors import ContentExtractor
 from src.processors import URLProcessor
 from src.crawler import SafeCrawler
+import os
+import logging
+import sys
 
 @click.command()
 @click.option('--config', '-c', default='config/settings.yaml', help='Chemin du fichier de configuration')
@@ -25,7 +28,7 @@ def main(config, output, resume):
         logging.info(f"Mode reprise: {resume}")
         
         # Crée le dossier de sortie
-        output_dir = f"{output}/{config_data['domain']['name']}"
+        output_dir = os.path.join(output, config_data['domain']['name'])
         os.makedirs(output_dir, exist_ok=True)
         logging.info(f"Dossier de sortie créé: {output_dir}")
         
@@ -46,7 +49,7 @@ def main(config, output, resume):
         
         # Initialise et lance le crawler
         try:
-            crawler = SafeCrawler(config_data, session, content_extractor, url_processor)
+            crawler = SafeCrawler(config_data, session, content_extractor, url_processor, output_dir, resume)
             logging.info("Crawler initialisé")
             
             crawler.crawl()
