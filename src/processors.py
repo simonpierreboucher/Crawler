@@ -1,6 +1,8 @@
 from src.constants import *
 import string
 import hashlib
+import unicodedata
+import os
 
 class URLProcessor:
     """Classe gérant le traitement des URLs"""
@@ -8,26 +10,42 @@ class URLProcessor:
     def __init__(self, config):
         self.config = config
     
-    def sanitize_filename(self, filename):
+    def sanitize_filename(self, url):
         try:
-            # Crée un hash du nom complet
-            filename_hash = hashlib.md5(filename.encode()).hexdigest()[:8]
+            # Génère un hash MD5 de l'URL complète
+            url_hash = hashlib.md5(url.encode('utf-8')).hexdigest()
+            
+            # Extraire une partie simplifiée du chemin de l'URL
+            parsed = urlparse(url)
+            path = parsed.path.strip('/').replace('/', '_')
+            if not path:
+                path = "home"
             
             # Normalise et nettoie le nom
-            filename = unicodedata.normalize('NFKD', filename).encode('ASCII', 'ignore').decode('ASCII')
+            path = unicodedata.normalize('NFKD', path).encode('ASCII', 'ignore').decode('ASCII')
             valid_chars = "-_.() %s%s" % (string.ascii_letters, string.digits)
-            filename = ''.join(c for c in filename if c in valid_chars)
+            path = ''.join(c for c in path if c in valid_chars)
             
-            # Tronque si nécessaire
-            max_length = self.config['files']['max_length']
-            name, ext = os.path.splitext(filename)
-            if len(filename) > max_length:
-                return f"{name[:max_length-12]}_{filename_hash}{ext}"
+            # Limite la longueur du chemin simplifié
+            max_path_length = 100  # Ajustez selon vos besoins
+            if len(path) > max_path_length:
+                path = path[:max_path_length]
+            
+            # Combine le chemin simplifié avec le hash pour garantir l'unicité
+            filename = f"{path}_{url_hash}"
+            
+            # Limite la longueur totale du nom de fichier
+            max_total_length = self.config['files']['max_length']
+            if len(filename) > max_total_length:
+                filename = filename[:max_total_length - 12] + f"_{url_hash[:8]}"
+            
             return filename
         except Exception as e:
             logging.error(f"Erreur lors de la sanitization du nom de fichier: {str(e)}")
-            return f"default_{filename_hash}"
-
+            # Génère un nom par défaut avec hash
+            url_hash = hashlib.md5(url.encode('utf-8')).hexdigest()[:12]
+            return f"default_{url_hash}"
+    
     def normalize_url(self, url):
         try:
             parsed = urlparse(url)
@@ -35,7 +53,7 @@ class URLProcessor:
         except Exception as e:
             logging.error(f"Erreur lors de la normalisation de l'URL: {str(e)}")
             return url
-
+    
     def is_valid_url(self, url):
         if not url or len(url) > self.config['files']['max_url_length']:
             return False
@@ -51,7 +69,7 @@ class URLProcessor:
         except Exception as e:
             logging.error(f"Erreur lors de la validation de l'URL: {str(e)}")
             return False
-
+    
     def should_process_url(self, url):
         if not url:
             return False
