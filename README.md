@@ -30,7 +30,7 @@ A robust, modular web crawler built in Python for extracting and saving content 
 2. Create and activate a virtual environment:
    ```bash
    # On Unix/MacOS
-   python -m venv venv
+   python3 -m venv venv
    source venv/bin/activate
 
    # On Windows
