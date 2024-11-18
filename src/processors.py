@@ -3,6 +3,7 @@ import string
 import hashlib
 import unicodedata
 import os
+from urllib.parse import urlparse
 
 class URLProcessor:
     """Classe gérant le traitement des URLs"""
