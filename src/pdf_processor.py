@@ -47,8 +47,8 @@ class PDFProcessor:
                         
                         # Utiliser pytesseract pour extraire le texte de l'image
                         ocr_text = pytesseract.image_to_string(
-                            pil_image, 
-                            config=self.tesseract_config, 
+                            pil_image,
+                            config=self.tesseract_config,
                             lang='+'.join(self.languages)
                         )
                         text += ocr_text + "\n"
