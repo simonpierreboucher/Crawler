@@ -25,9 +25,11 @@ class SafeCrawler:
         self.start_time = time.time()
         
         self.setup_signal_handlers()
-        if not self.resume:
+        if self.resume:
             self.load_state()
-
+        else:
+            self.save_initial_state()
+    
     def setup_signal_handlers(self):
         signal.signal(signal.SIGINT, self.signal_handler)
         signal.signal(signal.SIGTERM, self.signal_handler)
@@ -36,6 +38,13 @@ class SafeCrawler:
         logging.info("Arrêt gracieux du crawler...")
         self.save_state()
         sys.exit(0)
+
+    def save_initial_state(self):
+        """Initialise l'état si ce n'est pas une reprise."""
+        self.seen_urls = set()
+        self.queue = deque()
+        self.queue.append(self.config['domain']['start_url'])
+        logging.info("État initialisé")
 
     def save_state(self):
         try:
@@ -59,8 +68,11 @@ class SafeCrawler:
                 self.seen_urls = set(state.get('seen_urls', []))
                 self.queue.extend(state.get('queue', []))
                 logging.info("État chargé")
+            else:
+                self.save_initial_state()
         except Exception as e:
             logging.error(f"Erreur chargement état: {str(e)}")
+            self.save_initial_state()
 
     def safe_request(self, url, method='GET', **kwargs):
         for attempt in range(self.config['timeouts']['max_retries']):
@@ -77,8 +89,19 @@ class SafeCrawler:
                 )
                 response.raise_for_status()
                 return response
+            except requests.exceptions.HTTPError as http_err:
+                if response.status_code == 404:
+                    logging.error(f"Page non trouvée: {url}")
+                    break  # Ne pas réessayer pour les erreurs 404
+                elif attempt == self.config['timeouts']['max_retries'] - 1:
+                    logging.error(f"Max retries atteints pour {url}: {str(http_err)}")
+                    raise
+                else:
+                    logging.warning(f"Retrying {url} ({attempt + 1}/{self.config['timeouts']['max_retries']}) due to error: {str(http_err)}")
+                    time.sleep(2 ** attempt)
             except Exception as e:
                 if attempt == self.config['timeouts']['max_retries'] - 1:
+                    logging.error(f"Max retries atteints pour {url}: {str(e)}")
                     raise
                 logging.warning(f"Retrying {url} ({attempt + 1}/{self.config['timeouts']['max_retries']}) due to error: {str(e)}")
                 time.sleep(2 ** attempt)
@@ -90,16 +113,15 @@ class SafeCrawler:
 
             response = self.safe_request(url)
             
-            if response.status_code == 404:
-                logging.warning(f"Page non trouvée: {url}")
-                return None
-
             content_type = response.headers.get('Content-Type', '').lower()
 
             if 'application/pdf' in content_type:
-                return self.process_pdf(response, url)
+                return ('pdf', url, self.content_extractor.extract_text_from_pdf(response.content))
             elif 'text/html' in content_type:
-                return self.process_html(response, url)
+                return ('html', url, self.content_extractor.extract_text_from_html(response.content))
+            else:
+                logging.info(f"Type de contenu non supporté pour {url}: {content_type}")
+                return None
 
         except Exception as e:
             logging.error(f"Erreur traitement {url}: {str(e)}")
@@ -173,9 +195,6 @@ End of content from: {url}"""
             logging.error(f"Erreur extraction liens {url}: {str(e)}")
 
     def crawl(self):
-        if not self.resume:
-            self.queue.append(self.config['domain']['start_url'])
-        
         with concurrent.futures.ThreadPoolExecutor(
             max_workers=self.config['crawler']['max_workers']
         ) as executor:
