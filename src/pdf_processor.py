@@ -11,6 +11,7 @@ class PDFProcessor:
     
     def __init__(self):
         self.tesseract_config = r'--oem 3 --psm 6'
+        self.languages = ['fra']  # Ajoutez d'autres langues si nécessaire, par exemple ['fra', 'eng']
     
     def extract_text_from_pdf(self, pdf_content):
         """Extrait le texte d'un PDF en utilisant pdfplumber et OCR si nécessaire"""
@@ -45,7 +46,11 @@ class PDFProcessor:
                         pil_image = page.to_image(resolution=300).original
                         
                         # Utiliser pytesseract pour extraire le texte de l'image
-                        ocr_text = pytesseract.image_to_string(pil_image, config=self.tesseract_config, lang='fra')  # Modifier la langue si nécessaire
+                        ocr_text = pytesseract.image_to_string(
+                            pil_image, 
+                            config=self.tesseract_config, 
+                            lang='+'.join(self.languages)
+                        )
                         text += ocr_text + "\n"
             return text
         except Exception as e:
