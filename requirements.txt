@@ -6,3 +6,4 @@ pdfplumber
 pytesseract
 fake-useragent
 PyYAML
+Pillow
