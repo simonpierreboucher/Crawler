@@ -14,8 +14,9 @@ from src.pdf_processor import PDFProcessor
 from urllib.parse import urlparse
 from src.extractors import ContentExtractor
 from src.processors import URLProcessor
-import requests  # Import manquant ajouté
+import requests
 import signal
+import pyfiglet  # Import pour l'ASCII art
 
 class SafeCrawler:
     """Classe principale du crawler"""
@@ -44,6 +45,8 @@ class SafeCrawler:
         
         self.pdf_processor = PDFProcessor()
         logging.info("PDFProcessor initialisé")
+
+        self.step_counter = 0  # Compteur de pas pour l'affichage ASCII art
     
     def setup_signal_handlers(self):
         signal.signal(signal.SIGINT, self.signal_handler)
@@ -132,13 +135,14 @@ class SafeCrawler:
             content_main_type = content_type.split(';')[0]  # Pour gérer les paramètres comme charset
 
             if 'application/pdf' in content_main_type:
-                text = self.pdf_processor.extract_text_from_pdf(response.content)
-                return ('pdf', url, text)
+                pdf_content = response.content  # Le contenu binaire du PDF
+                text = self.pdf_processor.extract_text_from_pdf(pdf_content)
+                return ('pdf', url, (text, pdf_content))
             elif 'text/html' in content_main_type:
                 text = self.content_extractor.extract_text_from_html(response.content)
                 return ('html', url, text)
-            elif 'image/' in content_main_type:
-                return ('image', url, response.content)
+            elif content_main_type.startswith('image/'):
+                return ('image', url, (response.content, content_type))
             elif 'application/msword' in content_main_type or \
                  'application/vnd.openxmlformats-officedocument.wordprocessingml.document' in content_main_type:
                 return ('document', url, response.content)
@@ -157,27 +161,7 @@ class SafeCrawler:
             
             if content_type == 'html':
                 filepath = os.path.join(self.output_dir, 'text', f"{filename}.txt")
-            elif content_type == 'pdf':
-                filepath = os.path.join(self.file_handler.files_dir, 'document', f"{filename}.pdf")
-            elif content_type == 'image':
-                # Déterminer l'extension à partir du Content-Type
-                extension = content_type.split('/')[-1]
-                filepath = os.path.join(self.file_handler.files_dir, 'image', f"{filename}.{extension}")
-            elif content_type == 'document':
-                # Déterminer l'extension à partir du Content-Type
-                if 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' in content_type:
-                    extension = 'docx'
-                else:
-                    extension = 'doc'
-                filepath = os.path.join(self.file_handler.files_dir, 'document', f"{filename}.{extension}")
-            else:
-                filepath = os.path.join(self.output_dir, 'text', f"{filename}.txt")
-            
-            os.makedirs(os.path.dirname(filepath), exist_ok=True)
-            logging.info(f"Chemin de sauvegarde déterminé: {filepath}")
-            
-            if content_type in ['html', 'pdf']:
-                # Prépare le contenu avec métadonnées pour le texte
+                os.makedirs(os.path.dirname(filepath), exist_ok=True)
                 timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 formatted_content = f"""URL: {url}
 Timestamp: {timestamp}
@@ -187,16 +171,61 @@ Content Type: {content_type}
 {content}
 
 {'=' * 100}
-End of content from: {url}"""
-                
+Fin du contenu de : {url}"""
                 with open(filepath, "w", encoding='utf-8') as f:
                     f.write(formatted_content)
                 logging.info(f"Contenu sauvegardé: {url} -> {filepath}")
-            else:
-                # Sauvegarder le contenu binaire (images, documents)
+            elif content_type == 'pdf':
+                text, pdf_content = content  # Déballer le tuple
+                # Sauvegarder le texte extrait
+                txt_filepath = os.path.join(self.output_dir, 'text', f"{filename}.txt")
+                os.makedirs(os.path.dirname(txt_filepath), exist_ok=True)
+                timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                formatted_content = f"""URL: {url}
+Timestamp: {timestamp}
+Content Type: {content_type}
+{'=' * 100}
+
+{text}
+
+{'=' * 100}
+Fin du contenu de : {url}"""
+                with open(txt_filepath, "w", encoding='utf-8') as f:
+                    f.write(formatted_content)
+                logging.info(f"Texte extrait sauvegardé : {url} -> {txt_filepath}")
+                
+                # Sauvegarder le PDF original
+                pdf_filepath = os.path.join(self.file_handler.files_dir, 'document', f"{filename}.pdf")
+                os.makedirs(os.path.dirname(pdf_filepath), exist_ok=True)
+                with open(pdf_filepath, "wb") as f:
+                    f.write(pdf_content)
+                logging.info(f"PDF original sauvegardé : {url} -> {pdf_filepath}")
+            elif content_type == 'image':
+                image_content, content_type_header = content  # Déballer le tuple
+                # Déterminer l'extension à partir du Content-Type
+                extension = content_type_header.split('/')[-1]
+                filepath = os.path.join(self.file_handler.files_dir, 'image', f"{filename}.{extension}")
+                os.makedirs(os.path.dirname(filepath), exist_ok=True)
+                with open(filepath, "wb") as f:
+                    f.write(image_content)
+                logging.info(f"Image sauvegardée: {url} -> {filepath}")
+            elif content_type == 'document':
+                # Déterminer l'extension à partir du Content-Type
+                if 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' in content_type:
+                    extension = 'docx'
+                else:
+                    extension = 'doc'
+                filepath = os.path.join(self.file_handler.files_dir, 'document', f"{filename}.{extension}")
+                os.makedirs(os.path.dirname(filepath), exist_ok=True)
                 with open(filepath, "wb") as f:
                     f.write(content)
-                logging.info(f"Fichier sauvegardé: {url} -> {filepath}")
+                logging.info(f"Document sauvegardé: {url} -> {filepath}")
+            else:
+                filepath = os.path.join(self.output_dir, 'text', f"{filename}.txt")
+                os.makedirs(os.path.dirname(filepath), exist_ok=True)
+                with open(filepath, "w", encoding='utf-8') as f:
+                    f.write(content)
+                logging.info(f"Contenu texte sauvegardé: {url} -> {filepath}")
         except Exception as e:
             logging.error(f"Erreur sauvegarde {url}: {str(e)}")
 
@@ -243,6 +272,10 @@ End of content from: {url}"""
                             result = future.result()
                             if result:
                                 self.handle_result(*result)
+                                self.step_counter += 1
+                                # Tous les 5 pas, afficher l'ASCII art
+                                if self.step_counter % 5 == 0:
+                                    self.display_ascii_art()
                         except Exception as e:
                             logging.error(f"Erreur traitement {url}: {str(e)}")
 
@@ -254,3 +287,11 @@ End of content from: {url}"""
                 except Exception as e:
                     logging.error(f"Erreur boucle principale: {str(e)}")
                     continue
+
+    def display_ascii_art(self):
+        ascii_art = pyfiglet.figlet_format("POWERED")
+        print(ascii_art)
+        ascii_art = pyfiglet.figlet_format("BY")
+        print(ascii_art)
+        ascii_art = pyfiglet.figlet_format("M-LAI")
+        print(ascii_art)
