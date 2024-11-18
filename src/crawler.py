@@ -8,6 +8,7 @@ from collections import deque
 import concurrent.futures
 import time
 import random
+import requests  # Ajout de l'import
 
 class SafeCrawler:
     """Classe principale du crawler"""
@@ -90,7 +91,7 @@ class SafeCrawler:
                 response.raise_for_status()
                 return response
             except requests.exceptions.HTTPError as http_err:
-                if response.status_code == 404:
+                if http_err.response and http_err.response.status_code == 404:
                     logging.error(f"Page non trouvée: {url}")
                     break  # Ne pas réessayer pour les erreurs 404
                 elif attempt == self.config['timeouts']['max_retries'] - 1:
@@ -125,24 +126,6 @@ class SafeCrawler:
 
         except Exception as e:
             logging.error(f"Erreur traitement {url}: {str(e)}")
-            return None
-
-    def process_pdf(self, response, url):
-        try:
-            pdf_content = self.content_extractor.extract_text_from_pdf(response.content)
-            return ('pdf', url, pdf_content) if pdf_content.strip() else None
-        except Exception as e:
-            logging.error(f"Erreur PDF {url}: {str(e)}")
-            return None
-
-    def process_html(self, response, url):
-        try:
-            text = self.content_extractor.extract_text_from_html(response.content)
-            if not text.strip():
-                text = self.content_extractor.extract_text_alternative(response.content)
-            return ('html', url, text) if text.strip() else None
-        except Exception as e:
-            logging.error(f"Erreur HTML {url}: {str(e)}")
             return None
 
     def save_content(self, url, content_type, content):
