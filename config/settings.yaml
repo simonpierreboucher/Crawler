@@ -1,46 +1,46 @@
 domain:
-name: "www.ouellet.com"
-start_url: "https://www.ouellet.com/fr-ca/"
+  name: "www.ouellet.com"
+  start_url: "https://www.ouellet.com/fr-ca/"
 
 timeouts:
-connect: 10
-read: 30
-max_retries: 3
-max_redirects: 5
+  connect: 10
+  read: 30
+  max_retries: 3
+  max_redirects: 5
 
 crawler:
-max_workers: 5
-max_queue_size: 10000
-chunk_size: 8192
-delay_min: 1
-delay_max: 3
+  max_workers: 5
+  max_queue_size: 10000
+  chunk_size: 8192
+  delay_min: 1
+  delay_max: 3
 
 files:
-max_length: 100 # Limite maximale du nom de fichier
-max_url_length: 2000
-max_log_size: 10485760 # 10MB
-max_log_backups: 5
-output_dir: "output" # Répertoire de sortie
-log_dir: "logs" # Répertoire des logs
+  max_length: 100  # Limite maximale du nom de fichier
+  max_url_length: 2000
+  max_log_size: 10485760  # 10MB
+  max_log_backups: 5
+  output_dir: "output"  # Répertoire de sortie
+  log_dir: "logs"     # Répertoire des logs
 
 excluded:
-extensions:
-- ".css"
-- ".js"
-- ".ico"
-- ".xml"
-- ".woff"
-- ".woff2"
-- ".ttf"
-- ".eot"
-
-patterns:
-- "postulez-en-ligne"
-- "login"
-- "logout"
-- "signin"
-- "signup"
-- "javascript:"
-- "tel:"
-- "mailto:"
-- "distributeur"
+  extensions:
+    - ".css"
+    - ".js"
+    - ".ico"
+    - ".xml"
+    - ".woff"
+    - ".woff2"
+    - ".ttf"
+    - ".eot"
+  
+  patterns:
+    - "postulez-en-ligne"
+    - "login"
+    - "logout"
+    - "signin"
+    - "signup"
+    - "javascript:"
+    - "tel:"
+    - "mailto:"
+    - "distributeur"
