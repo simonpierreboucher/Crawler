@@ -1,3 +1,4 @@
+# run.py
 from src.constants import *
 import click
 from src.utils import load_config, setup_logging
@@ -11,7 +12,7 @@ import sys
 
 @click.command()
 @click.option('--config', '-c', default='config/settings.yaml', help='Chemin du fichier de configuration')
-@click.option('--output', '-o', default='text', help='Dossier de sortie')
+@click.option('--output', '-o', default='output', help='Dossier de sortie')
 @click.option('--resume', '-r', is_flag=True, help='Reprendre un crawl précédent')
 def main(config, output, resume):
     """Programme principal du crawler web"""
