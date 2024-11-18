@@ -1,6 +1,3 @@
-Voici le fichier `README.md` modifié selon vos instructions :
-
-```markdown
 # Web Crawler for Text Extraction
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python Version](https://img.shields.io/badge/python-3.7%2B-blue.svg)](https://www.python.org/downloads/)
@@ -211,8 +208,3 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## Contact
 
 Project Link: [https://github.com/simonpierreboucher/Crawler](https://github.com/simonpierreboucher/Crawler)
-```
-
----
-
-Les modifications apportées incluent la mention de l'affichage des messages ASCII art ("POWERED", "BY", "M-LAI") tous les 5 pas, ainsi que la sauvegarde des images dans le dossier `image` sous leurs formats respectifs.
