@@ -16,7 +16,7 @@ crawler:
   delay_max: 3
 
 files:
-  max_length: 200
+  max_length: 100  # Limite maximale du nom de fichier
   max_url_length: 2000
   max_log_size: 10485760  # 10MB
   max_log_backups: 5
