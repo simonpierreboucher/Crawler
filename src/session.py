@@ -1,8 +1,10 @@
+# src/session.py
 from src.constants import *
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 from fake_useragent import UserAgent
 import requests
+import logging
 
 class SafeSession:
     """Classe gérant les sessions HTTP de manière sécurisée"""
