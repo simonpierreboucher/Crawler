@@ -1,10 +1,15 @@
 from src.constants import *
 import yaml
+import logging
+from datetime import datetime
+from logging.handlers import RotatingFileHandler
+import sys
+import os
 
 def load_config(config_path="config/settings.yaml"):
     """Charge la configuration depuis le fichier YAML"""
     try:
-        with open(config_path, 'r') as f:
+        with open(config_path, 'r', encoding='utf-8') as f:
             return yaml.safe_load(f)
     except Exception as e:
         logging.error(f"Erreur lors du chargement de la configuration: {str(e)}")
@@ -13,7 +18,9 @@ def load_config(config_path="config/settings.yaml"):
 def setup_logging(config):
     """Configure le système de logging"""
     try:
-        log_file = f'crawler_log_{datetime.now().strftime("%Y%m%d_%H%M%S")}.txt'
+        log_dir = config['files'].get('log_dir', 'logs')
+        os.makedirs(log_dir, exist_ok=True)
+        log_file = os.path.join(log_dir, f'crawler_log_{datetime.now().strftime("%Y%m%d_%H%M%S")}.txt')
         
         logging.basicConfig(
             level=logging.INFO,
