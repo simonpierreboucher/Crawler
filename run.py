@@ -1,4 +1,3 @@
-# run.py
 from src.constants import *
 import click
 from src.utils import load_config, setup_logging
@@ -9,6 +8,11 @@ from src.crawler import SafeCrawler
 import os
 import logging
 import sys
+import pyfiglet  # Ajout de l'import pyfiglet
+
+# Affichage de l'ASCII art au début du script
+ascii_art = pyfiglet.figlet_format("M-LAI")
+print(ascii_art)
 
 @click.command()
 @click.option('--config', '-c', default='config/settings.yaml', help='Chemin du fichier de configuration')
