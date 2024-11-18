@@ -49,3 +49,4 @@ excluded:
     - "javascript:"
     - "tel:"
     - "mailto:"
+    - "distributeur"
