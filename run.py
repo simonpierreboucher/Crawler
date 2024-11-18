@@ -8,7 +8,7 @@ from src.crawler import SafeCrawler
 import os
 import logging
 import sys
-import pyfiglet  # Ajout de l'import pyfiglet
+import pyfiglet  # Import de pyfiglet
 
 # Affichage de l'ASCII art au début du script
 ascii_art = pyfiglet.figlet_format("M-LAI")
