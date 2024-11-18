@@ -39,20 +39,12 @@ class ContentExtractor:
                 for page_number, page in enumerate(pdf.pages, start=1):
                     if not page.extract_text():
                         logging.info(f"Extraction OCR pour la page {page_number}")
-                        # Extraire les images de la page
-                        images = page.images
-                        for img in images:
-                            try:
-                                # Extraire l'image
-                                x0, y0, x1, y1 = img['x0'], img['y0'], img['x1'], img['y1']
-                                bbox = (x0, y0, x1, y1)
-                                pil_image = page.to_image(resolution=300).crop(bbox).original
-                                
-                                # Utiliser pytesseract pour extraire le texte de l'image
-                                ocr_text = pytesseract.image_to_string(pil_image, lang='fra')  # Modifier la langue si nécessaire
-                                text += ocr_text + "\n"
-                            except Exception as img_e:
-                                logging.error(f"Erreur OCR sur image de la page {page_number}: {str(img_e)}")
+                        # Extraire l'image complète de la page
+                        pil_image = page.to_image(resolution=300).original
+                        
+                        # Utiliser pytesseract pour extraire le texte de l'image
+                        ocr_text = pytesseract.image_to_string(pil_image, lang='fra')  # Modifier la langue si nécessaire
+                        text += ocr_text + "\n"
             return text
         except Exception as e:
             logging.error(f"Erreur extraction OCR PDF: {str(e)}")
