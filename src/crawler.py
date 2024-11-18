@@ -15,6 +15,7 @@ from urllib.parse import urlparse
 from src.extractors import ContentExtractor
 from src.processors import URLProcessor
 import requests  # Import manquant ajouté
+import signal
 
 class SafeCrawler:
     """Classe principale du crawler"""
@@ -128,13 +129,19 @@ class SafeCrawler:
             response = self.safe_request(url)
             
             content_type = response.headers.get('Content-Type', '').lower()
+            content_main_type = content_type.split(';')[0]  # Pour gérer les paramètres comme charset
 
-            if 'application/pdf' in content_type:
+            if 'application/pdf' in content_main_type:
                 text = self.pdf_processor.extract_text_from_pdf(response.content)
                 return ('pdf', url, text)
-            elif 'text/html' in content_type:
+            elif 'text/html' in content_main_type:
                 text = self.content_extractor.extract_text_from_html(response.content)
                 return ('html', url, text)
+            elif 'image/' in content_main_type:
+                return ('image', url, response.content)
+            elif 'application/msword' in content_main_type or \
+                 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' in content_main_type:
+                return ('document', url, response.content)
             else:
                 logging.info(f"Type de contenu non supporté pour {url}: {content_type}")
                 return None
@@ -147,19 +154,32 @@ class SafeCrawler:
         """Sauvegarde le contenu extrait avec métadonnées"""
         try:
             filename = self.url_processor.sanitize_filename(url)
+            
             if content_type == 'html':
                 filepath = os.path.join(self.output_dir, 'text', f"{filename}.txt")
             elif content_type == 'pdf':
                 filepath = os.path.join(self.file_handler.files_dir, 'document', f"{filename}.pdf")
+            elif content_type == 'image':
+                # Déterminer l'extension à partir du Content-Type
+                extension = content_type.split('/')[-1]
+                filepath = os.path.join(self.file_handler.files_dir, 'image', f"{filename}.{extension}")
+            elif content_type == 'document':
+                # Déterminer l'extension à partir du Content-Type
+                if 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' in content_type:
+                    extension = 'docx'
+                else:
+                    extension = 'doc'
+                filepath = os.path.join(self.file_handler.files_dir, 'document', f"{filename}.{extension}")
             else:
                 filepath = os.path.join(self.output_dir, 'text', f"{filename}.txt")
             
             os.makedirs(os.path.dirname(filepath), exist_ok=True)
             logging.info(f"Chemin de sauvegarde déterminé: {filepath}")
             
-            # Prépare le contenu avec métadonnées
-            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            formatted_content = f"""URL: {url}
+            if content_type in ['html', 'pdf']:
+                # Prépare le contenu avec métadonnées pour le texte
+                timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                formatted_content = f"""URL: {url}
 Timestamp: {timestamp}
 Content Type: {content_type}
 {'=' * 100}
@@ -168,10 +188,15 @@ Content Type: {content_type}
 
 {'=' * 100}
 End of content from: {url}"""
-            
-            with open(filepath, "w", encoding='utf-8') as f:
-                f.write(formatted_content)
-            logging.info(f"Contenu sauvegardé: {url} -> {filepath}")
+                
+                with open(filepath, "w", encoding='utf-8') as f:
+                    f.write(formatted_content)
+                logging.info(f"Contenu sauvegardé: {url} -> {filepath}")
+            else:
+                # Sauvegarder le contenu binaire (images, documents)
+                with open(filepath, "wb") as f:
+                    f.write(content)
+                logging.info(f"Fichier sauvegardé: {url} -> {filepath}")
         except Exception as e:
             logging.error(f"Erreur sauvegarde {url}: {str(e)}")
 
