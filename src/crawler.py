@@ -274,7 +274,7 @@ Fin du contenu de : {url}"""
                                 self.handle_result(*result)
                                 self.step_counter += 1
                                 # Tous les 5 pas, afficher l'ASCII art
-                                if self.step_counter % 5 == 0:
+                                if self.step_counter % 20 == 0:
                                     self.display_ascii_art()
                         except Exception as e:
                             logging.error(f"Erreur traitement {url}: {str(e)}")
@@ -289,9 +289,5 @@ Fin du contenu de : {url}"""
                     continue
 
     def display_ascii_art(self):
-        ascii_art = pyfiglet.figlet_format("POWERED")
-        print(ascii_art)
-        ascii_art = pyfiglet.figlet_format("BY")
-        print(ascii_art)
         ascii_art = pyfiglet.figlet_format("M-LAI")
         print(ascii_art)
