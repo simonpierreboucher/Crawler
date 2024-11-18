@@ -13,13 +13,17 @@ class URLProcessor:
     def sanitize_filename(self, url):
         try:
             # Génère un hash MD5 de l'URL complète
-            url_hash = hashlib.md5(url.encode('utf-8')).hexdigest()
+            url_hash = hashlib.md5(url.encode('utf-8')).hexdigest()[:8]
             
-            # Extraire une partie simplifiée du chemin de l'URL
+            # Extraire le dernier segment du chemin de l'URL
             parsed = urlparse(url)
-            path = parsed.path.strip('/').replace('/', '_')
+            path = parsed.path.strip('/').split('/')[-1]  # Prendre uniquement le dernier segment
             if not path:
                 path = "home"
+            
+            # Supprimer l'extension si c'est un PDF
+            if path.lower().endswith('.pdf'):
+                path = os.path.splitext(path)[0]
             
             # Normalise et nettoie le nom
             path = unicodedata.normalize('NFKD', path).encode('ASCII', 'ignore').decode('ASCII')
@@ -27,7 +31,7 @@ class URLProcessor:
             path = ''.join(c for c in path if c in valid_chars)
             
             # Limite la longueur du chemin simplifié
-            max_path_length = 100  # Ajustez selon vos besoins
+            max_path_length = 50  # Ajustez selon vos besoins
             if len(path) > max_path_length:
                 path = path[:max_path_length]
             
@@ -37,13 +41,15 @@ class URLProcessor:
             # Limite la longueur totale du nom de fichier
             max_total_length = self.config['files']['max_length']
             if len(filename) > max_total_length:
-                filename = filename[:max_total_length - 12] + f"_{url_hash[:8]}"
+                # Troncature supplémentaire si nécessaire
+                excess_length = len(filename) - max_total_length
+                filename = f"{filename[:-excess_length]}_{url_hash[:4]}"
             
             return filename
         except Exception as e:
             logging.error(f"Erreur lors de la sanitization du nom de fichier: {str(e)}")
             # Génère un nom par défaut avec hash
-            url_hash = hashlib.md5(url.encode('utf-8')).hexdigest()[:12]
+            url_hash = hashlib.md5(url.encode('utf-8')).hexdigest()[:8]
             return f"default_{url_hash}"
     
     def normalize_url(self, url):
