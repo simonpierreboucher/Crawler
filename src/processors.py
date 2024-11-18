@@ -24,8 +24,8 @@ class URLProcessor:
             if not path:
                 path = "home"
             
-            # Supprimer l'extension si c'est un PDF
-            if path.lower().endswith('.pdf'):
+            # Supprimer l'extension si c'est un PDF ou une image
+            if path.lower().endswith(('.pdf', '.png', '.jpg', '.jpeg', '.gif', '.bmp', '.svg')):
                 path = os.path.splitext(path)[0]
             
             # Normalise et nettoie le nom
