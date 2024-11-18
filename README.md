@@ -1,3 +1,6 @@
+Voici le fichier `README.md` modifié selon vos instructions :
+
+```markdown
 # Web Crawler for Text Extraction
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python Version](https://img.shields.io/badge/python-3.7%2B-blue.svg)](https://www.python.org/downloads/)
@@ -18,6 +21,8 @@ A robust, modular web crawler built in Python for extracting and saving content 
 - State preservation and recovery
 - Rate limiting and polite crawling
 - Command-line interface
+- Saves images (PNG, JPG, JPEG) in the `image` folder with their respective formats
+- Displays ASCII art ("POWERED", "BY", "M-LAI") every 5 steps during the crawl
 
 ## Installation
 
@@ -57,6 +62,8 @@ Timestamp: 2024-11-12 23:45:12
 ====================================================================================================
 End of content from: https://www.example.com/page
 ```
+
+Images are saved in the `image` folder with the respective format (PNG, JPG, JPEG).
 
 ## Configuration
 
@@ -194,6 +201,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
     * Added metadata to saved files
     * Improved error handling
     * Enhanced logging system
+    * Display ASCII art at regular intervals (every 5 steps)
 
 * 0.1
     * Initial Release
@@ -203,3 +211,8 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## Contact
 
 Project Link: [https://github.com/simonpierreboucher/Crawler](https://github.com/simonpierreboucher/Crawler)
+```
+
+---
+
+Les modifications apportées incluent la mention de l'affichage des messages ASCII art ("POWERED", "BY", "M-LAI") tous les 5 pas, ainsi que la sauvegarde des images dans le dossier `image` sous leurs formats respectifs.
