@@ -16,7 +16,7 @@ class ContentExtractor:
             
             text = soup.get_text(separator='\n', strip=True)
             lines = (line.strip() for line in text.splitlines())
-            chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
+            chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
             return '\n'.join(chunk for chunk in chunks if chunk)
         except Exception as e:
             logging.error(f"Erreur extraction HTML: {str(e)}")
