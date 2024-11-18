@@ -1,3 +1,4 @@
+# src/crawler.py
 from src.constants import *
 import os
 import logging
@@ -8,7 +9,11 @@ from collections import deque
 import concurrent.futures
 import time
 import random
-import requests  # Ajout de l'import
+from src.file_handler import FileHandler
+from src.pdf_processor import PDFProcessor
+from urllib.parse import urlparse
+from src.extractors import ContentExtractor
+from src.processors import URLProcessor
 
 class SafeCrawler:
     """Classe principale du crawler"""
@@ -30,6 +35,13 @@ class SafeCrawler:
             self.load_state()
         else:
             self.save_initial_state()
+        
+        # Initialisation de FileHandler et PDFProcessor
+        self.file_handler = FileHandler(self.output_dir)
+        logging.info("FileHandler initialisé")
+        
+        self.pdf_processor = PDFProcessor()
+        logging.info("PDFProcessor initialisé")
     
     def setup_signal_handlers(self):
         signal.signal(signal.SIGINT, self.signal_handler)
@@ -117,9 +129,11 @@ class SafeCrawler:
             content_type = response.headers.get('Content-Type', '').lower()
 
             if 'application/pdf' in content_type:
-                return ('pdf', url, self.content_extractor.extract_text_from_pdf(response.content))
+                text = self.pdf_processor.extract_text_from_pdf(response.content)
+                return ('pdf', url, text)
             elif 'text/html' in content_type:
-                return ('html', url, self.content_extractor.extract_text_from_html(response.content))
+                text = self.content_extractor.extract_text_from_html(response.content)
+                return ('html', url, text)
             else:
                 logging.info(f"Type de contenu non supporté pour {url}: {content_type}")
                 return None
@@ -132,8 +146,15 @@ class SafeCrawler:
         """Sauvegarde le contenu extrait avec métadonnées"""
         try:
             filename = self.url_processor.sanitize_filename(url)
-            filepath = os.path.join(self.output_dir, f"{filename}.txt")
+            if content_type == 'html':
+                filepath = os.path.join(self.output_dir, 'text', f"{filename}.txt")
+            elif content_type == 'pdf':
+                filepath = os.path.join(self.file_handler.files_dir, 'document', f"{filename}.pdf")
+            else:
+                filepath = os.path.join(self.output_dir, 'text', f"{filename}.txt")
+            
             os.makedirs(os.path.dirname(filepath), exist_ok=True)
+            logging.info(f"Chemin de sauvegarde déterminé: {filepath}")
             
             # Prépare le contenu avec métadonnées
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -149,7 +170,7 @@ End of content from: {url}"""
             
             with open(filepath, "w", encoding='utf-8') as f:
                 f.write(formatted_content)
-            logging.info(f"Contenu sauvegardé: {url}")
+            logging.info(f"Contenu sauvegardé: {url} -> {filepath}")
         except Exception as e:
             logging.error(f"Erreur sauvegarde {url}: {str(e)}")
 
