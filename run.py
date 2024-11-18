@@ -28,7 +28,7 @@ def main(config, output, resume):
         logging.info(f"Mode reprise: {resume}")
         
         # Crée le dossier de sortie
-        output_dir = os.path.join(output, config_data['domain']['name'])
+        output_dir = os.path.join(output, config_data['files']['output_dir'], config_data['domain']['name'])
         os.makedirs(output_dir, exist_ok=True)
         logging.info(f"Dossier de sortie créé: {output_dir}")
         
