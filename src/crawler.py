@@ -14,6 +14,7 @@ from src.pdf_processor import PDFProcessor
 from urllib.parse import urlparse
 from src.extractors import ContentExtractor
 from src.processors import URLProcessor
+import requests  # Import manquant ajouté
 
 class SafeCrawler:
     """Classe principale du crawler"""
