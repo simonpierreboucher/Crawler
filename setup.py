@@ -1,8 +1,9 @@
+# setup.py
 from setuptools import setup, find_packages
 
 setup(
     name="web-crawler",
-    version="1.2.1",
+    version="1.3.0",  # Mise à jour de la version
     packages=find_packages(),
     install_requires=[
         line.strip()
@@ -10,7 +11,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'crawler=src.run:main',
+            'crawler=run:main',
         ],
     },
 )
