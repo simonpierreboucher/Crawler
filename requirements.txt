@@ -8,3 +8,4 @@ Pillow
 fake-useragent
 PyMuPDF
 PyYAML
+pyfiglet
