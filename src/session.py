@@ -16,7 +16,7 @@ class SafeSession:
                 backoff_factor=1,
                 status_forcelist=[429, 500, 502, 503, 504],
                 allowed_methods=["HEAD", "GET", "OPTIONS"],
-                redirect=config['timeouts']['max_redirects']
+                raise_on_status=False  # Modifier pour ne pas lever d'exception sur certains statuts
             )
             
             adapter = HTTPAdapter(max_retries=retry_strategy)
